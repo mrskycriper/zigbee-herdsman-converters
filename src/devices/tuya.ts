@@ -14,6 +14,8 @@ import tz from '../converters/toZigbee';
 import {KeyValue, Definition, Tz, Fz, Expose, KeyValueAny, KeyValueString} from '../lib/types';
 import {onOff, quirkCheckinInterval} from '../lib/modernExtend';
 
+const {tuyaLight} = tuya.modernExtend;
+
 const e = exposes.presets;
 const ea = exposes.access;
 
@@ -1000,8 +1002,7 @@ const definitions: Definition[] = [
         model: 'TS0501A',
         description: 'Zigbee light',
         vendor: 'TuYa',
-        extend: tuya.extend.light_onoff_brightness(),
-        meta: {turnsOffAtBrightness1: false},
+        extend: [tuyaLight()],
         whiteLabel: [
             tuya.whitelabel('Lidl', 'HG06463A', 'Livarno Lux E27 ST64 filament bulb', ['_TZ3000_j2w1dw29']),
             tuya.whitelabel('Lidl', 'HG06463B', 'Livarno Lux E27 G95 filament bulb', ['_TZ3000_nosnx7im']),
@@ -1009,11 +1010,21 @@ const definitions: Definition[] = [
         ],
     },
     {
+        fingerprint: tuya.fingerprint('TS0501B', ['_TZB210_rkgngb5o']),
+        model: 'TS0501B_dimmer',
+        description: 'Zigbee dimmer',
+        vendor: 'TuYa',
+        extend: [tuyaLight({configureReporting: true, effect: false})],
+        whiteLabel: [
+            tuya.whitelabel('TuYa', 'L1(ZW)', 'Light dimmer 0-10V', ['_TZB210_rkgngb5o']),
+        ],
+    },
+    {
         zigbeeModel: ['TS0501B'],
         model: 'TS0501B',
         description: 'Zigbee light',
         vendor: 'TuYa',
-        extend: tuya.extend.light_onoff_brightness(),
+        extend: [tuyaLight()],
         whiteLabel: [
             tuya.whitelabel('MiBoxer', 'FUT036Z', 'Single color LED controller', ['_TZ3210_dxroobu3', '_TZ3210_dbilpfqk']),
             tuya.whitelabel('Mercator Ikuü', 'SMFL20W-ZB', 'Ridley Floodlight', ['_TZ3000_juq7i1fr']),
@@ -1199,6 +1210,7 @@ const definitions: Definition[] = [
             tuya.whitelabel('TuYa', 'TS0207_water_leak_detector_3', 'Zigbee water leak sensor', ['_TYZB01_sqmd19i1']),
             tuya.whitelabel('TuYa', '899WZ', 'Water leak detector with 80DB Alarm', ['_TZ3000_mugyhz0q']),
             tuya.whitelabel('Niceboy', 'ORBIS Water Sensor', 'Water leak sensor', ['_TZ3000_awvmkayh']),
+            tuya.whitelabel('Nous', 'E4', 'Water Leakage Sensor)', ['_TZ3000_0s9gukzt']),
         ],
         toZigbee: [],
         configure: async (device, coordinatorEndpoint, logger) => {
@@ -1310,7 +1322,7 @@ const definitions: Definition[] = [
     },
     {
         fingerprint: tuya.fingerprint('TS0601', ['_TZE200_ip2akl4w', '_TZE200_1agwnems', '_TZE200_la2c2uo9', '_TZE200_579lguh2',
-            '_TZE200_vucankjx', '_TZE200_4mh6tyyo', '_TZE204_hlx9tnzb', '_TZE204_n9ctkb6j']),
+            '_TZE200_vucankjx', '_TZE200_4mh6tyyo', '_TZE204_hlx9tnzb', '_TZE204_n9ctkb6j', '_TZE204_9qhuzgo0']),
         model: 'TS0601_dimmer_1',
         vendor: 'TuYa',
         description: '1 gang smart dimmer',
@@ -1749,7 +1761,7 @@ const definitions: Definition[] = [
         },
     },
     {
-        fingerprint: tuya.fingerprint('TS0601', ['_TZE200_nkjintbl', '_TZE200_ji1gn7rw', '_TZE200_3t91nb6k', '_TZE204_wvovwe9h']),
+        fingerprint: tuya.fingerprint('TS0601', ['_TZE200_nkjintbl', '_TZE200_ji1gn7rw', '_TZE200_3t91nb6k', '_TZE204_wvovwe9h', '_TZE204_3t91nb6k']),
         model: 'TS0601_switch_2_gang',
         vendor: 'TuYa',
         description: '2 gang switch',
@@ -3299,6 +3311,8 @@ const definitions: Definition[] = [
             ...tuya.exposes.scheduleAllDays(ea.STATE_SET, 'HH:MM/C HH:MM/C HH:MM/C HH:MM/C'),
             e.enum('display_brightness', ea.STATE_SET, ['high', 'medium', 'low']).withDescription('Display brightness'),
             e.enum('screen_orientation', ea.STATE_SET, ['up', 'right', 'down', 'left']).withDescription('Screen orientation'),
+            e.enum('mode', ea.STATE_SET, ['comfort', 'eco']).withDescription('Hysteresis - comfort > switches off/on exactly at reached ' +
+                'temperature with valve smooth from 0 to 100%, eco > 0.5 degrees above or below, valve either 0 or 100%'),
         ],
         meta: {
             tuyaDatapoints: [
@@ -3328,6 +3342,7 @@ const definitions: Definition[] = [
                 [113, 'screen_orientation', tuya.valueConverterBasic.lookup({
                     'up': tuya.enum(0), 'right': tuya.enum(1), 'down': tuya.enum(2), 'left': tuya.enum(3),
                 })],
+                [114, 'mode', tuya.valueConverterBasic.lookup({'comfort': tuya.enum(0), 'eco': tuya.enum(1)})],
             ],
         },
     },
@@ -3819,7 +3834,7 @@ const definitions: Definition[] = [
         model: 'TS1101_dimmer_module_1ch',
         vendor: 'TuYa',
         description: 'Zigbee dimmer module 1 channel',
-        extend: tuya.extend.light_onoff_brightness({minBrightness: true}),
+        extend: [tuyaLight({minBrightness: true})],
     },
     {
         fingerprint: [{modelID: 'TS1101', manufacturerName: '_TZ3000_7ysdnebc'}],
@@ -3827,16 +3842,9 @@ const definitions: Definition[] = [
         vendor: 'TuYa',
         description: 'Zigbee dimmer module 2 channel',
         whiteLabel: [{vendor: 'OXT', model: 'SWTZ25'}],
-        extend: tuya.extend.light_onoff_brightness({minBrightness: true, endpoints: ['l1', 'l2'], noConfigure: true}),
-        endpoint: (device) => {
-            return {'l1': 1, 'l2': 2};
-        },
-        meta: {multiEndpoint: true},
+        extend: [tuyaLight({minBrightness: true, endpoints: {l1: 1, l2: 2}, configureReporting: true})],
         configure: async (device, coordinatorEndpoint, logger) => {
             await tuya.configureMagicPacket(device, coordinatorEndpoint, logger);
-            await tuya.extend.light_onoff_brightness().configure(device, coordinatorEndpoint, logger);
-            await reporting.bind(device.getEndpoint(1), coordinatorEndpoint, ['genOnOff', 'genLevelCtrl']);
-            await reporting.bind(device.getEndpoint(2), coordinatorEndpoint, ['genOnOff', 'genLevelCtrl']);
         },
     },
     {
@@ -4347,6 +4355,7 @@ const definitions: Definition[] = [
             e.binary('factory_reset', ea.STATE_SET, 'ON', 'OFF')
                 .withDescription('Full factory reset, use with caution!'),
             e.child_lock(),
+            e.temperature_sensor_select(['internal', 'external', 'both']),
             e.climate()
                 .withSystemMode(['off', 'heat'], ea.STATE_SET)
                 .withPreset(['manual', 'auto', 'temporary_manual'])
@@ -4406,6 +4415,7 @@ const definitions: Definition[] = [
                 [102, 'frost_protection', tuya.valueConverter.onOff],
                 [103, 'factory_reset', tuya.valueConverter.onOff],
                 [104, 'working_day', tuya.valueConverter.workingDay],
+                [106, 'sensor', tuya.valueConverterBasic.lookup({'internal': tuya.enum(0), 'external': tuya.enum(1), 'both': tuya.enum(2)})],
                 [107, 'deadzone_temperature', tuya.valueConverter.divideBy10],
                 [109, null, tuya.valueConverter.ZWT198_schedule],
                 [109, 'schedule_weekday', tuya.valueConverter.ZWT198_schedule],
@@ -4466,7 +4476,9 @@ const definitions: Definition[] = [
         ],
         fromZigbee: [fz.battery, fz.ias_vibration_alarm_1_with_timeout],
         toZigbee: [tz.TS0210_sensitivity],
-        exposes: [e.battery(), e.battery_voltage(), e.vibration(), e.numeric('sensitivity', ea.STATE_SET).withValueMin(0).withValueMax(50)],
+        exposes: [e.battery(), e.battery_voltage(), e.vibration(),
+            e.numeric('sensitivity', ea.STATE_SET).withValueMin(0).withValueMax(50)
+                .withDescription('Sensitivty of the sensor, press button on the device right before changing this')],
     },
     {
         fingerprint: [{modelID: 'TS011F', manufacturerName: '_TZ3000_8bxrzyxz'},
@@ -4844,7 +4856,7 @@ const definitions: Definition[] = [
         model: 'TS0052',
         vendor: 'TuYa',
         description: 'Zigbee dimmer module 1 channel',
-        extend: tuya.extend.light_onoff_brightness(),
+        extend: [tuyaLight()],
     },
     {
         fingerprint: [{modelID: 'TS0601', manufacturerName: '_TZE200_ikvncluo'},
@@ -5401,7 +5413,10 @@ const definitions: Definition[] = [
         fromZigbee: [tuya.fz.datapoints],
         toZigbee: [tuya.tz.datapoints],
         configure: tuya.configureMagicPacket,
-        whiteLabel: [{vendor: 'MatSee Plus', model: 'PC321-Z-TY'}],
+        whiteLabel: [
+            {vendor: 'MatSee Plus', model: 'PC321-Z-TY'},
+            {vendor: 'Owon', model: 'PC321-Z-TY'},
+        ],
         exposes: [
             e.ac_frequency(), e.temperature(), e.current(), e.power(), e.energy(),
             tuya.exposes.energyWithPhase('a'), tuya.exposes.energyWithPhase('b'), tuya.exposes.energyWithPhase('c'),

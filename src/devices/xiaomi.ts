@@ -9,7 +9,7 @@ import extend from '../lib/extend';
 import {
     light, numeric, binary, enumLookup, forceDeviceType,
     temperature, humidity, forcePowerSource, quirkAddEndpointCluster,
-    quirkCheckinInterval,
+    quirkCheckinInterval, onOff, customTimeResponse,
 } from '../lib/modernExtend';
 const e = exposes.presets;
 const ea = exposes.access;
@@ -18,7 +18,8 @@ import * as xiaomi from '../lib/xiaomi';
 const {
     xiaomiAction, xiaomiOperationMode, xiaomiPowerOnBehavior, xiaomiZigbeeOTA,
     xiaomiSwitchType, aqaraAirQuality, aqaraVoc, aqaraDisplayUnit, xiaomiLight,
-    xiaomiOutageCountRestoreBindReporting,
+    xiaomiOutageCountRestoreBindReporting, xiaomiElectricityMeter, xiaomiPower,
+    xiaomiOverloadProtection, xiaomiLedIndicator, xiaomiButtonLock,
 } = xiaomi.modernExtend;
 import * as utils from '../lib/utils';
 import {Definition, OnEvent, Fz, KeyValue, Tz} from '../lib/types';
@@ -2039,19 +2040,7 @@ const definitions: Definition[] = [
         exposes: [e.switch(), e.power().withAccess(ea.STATE_GET), e.energy(), e.device_temperature(), e.voltage(),
             e.power_outage_memory(), e.led_disabled_night(),
             e.auto_off(30)],
-        onEvent: async (type, data, device) => {
-            device.skipTimeResponse = true;
-            // According to the Zigbee the genTime.time should be the seconds since 1 January 2020 UTC
-            // However the device expects this to be the seconds since 1 January in the local time zone.
-            // Disable the responses of zigbee-herdsman and respond here instead.
-            // https://github.com/Koenkk/zigbee-herdsman-converters/pull/2843#issuecomment-888532667
-            if (type === 'message' && data.type === 'read' && data.cluster === 'genTime') {
-                const oneJanuary2000 = new Date('January 01, 2000 00:00:00 UTC+00:00').getTime();
-                const secondsUTC = Math.round(((new Date()).getTime() - oneJanuary2000) / 1000);
-                const secondsLocal = secondsUTC - (new Date()).getTimezoneOffset() * 60;
-                device.getEndpoint(1).readResponse('genTime', data.meta.zclTransactionSequenceNumber, {time: secondsLocal});
-            }
-        },
+        extend: [customTimeResponse('2000_LOCAL')],
     },
     {
         zigbeeModel: ['lumi.ctrl_86plug', 'lumi.ctrl_86plug.aq1'],
@@ -3421,6 +3410,44 @@ const definitions: Definition[] = [
             await device.getEndpoint(1).write('aqaraOpple', {'mode': 1}, {manufacturerCode: 0x115f, disableResponse: true});
         },
         extend: [xiaomiZigbeeOTA()],
+    },
+    {
+        zigbeeModel: ['lumi.plug.aeu001'],
+        model: 'WP-P01D',
+        vendor: 'Aqara',
+        description: 'Aqara wall outlet H2 EU',
+        extend: [
+            xiaomiZigbeeOTA(),
+            onOff({powerOnBehavior: false}),
+            xiaomiPowerOnBehavior(),
+            xiaomiPower(),
+            xiaomiElectricityMeter(),
+            xiaomiOverloadProtection(),
+            xiaomiLedIndicator(),
+            xiaomiButtonLock(),
+            binary({
+                name: 'charging_protection',
+                cluster: 'aqaraOpple',
+                attribute: {ID: 0x0202, type: 0x10},
+                valueOn: ['ON', 1],
+                valueOff: ['OFF', 0],
+                description: 'Turn off the outlet if the power is below the set limit for half an hour',
+                access: 'ALL',
+                zigbeeCommandOptions: {manufacturerCode},
+            }),
+            numeric({
+                name: 'charging_limit',
+                cluster: 'aqaraOpple',
+                attribute: {ID: 0x0206, type: 0x39},
+                valueMin: 0.1,
+                valueMax: 2,
+                valueStep: 0.1,
+                unit: 'W',
+                description: 'Charging protection power limit',
+                access: 'ALL',
+                zigbeeCommandOptions: {manufacturerCode},
+            }),
+        ],
     },
 ];
 
