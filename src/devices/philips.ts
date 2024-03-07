@@ -984,7 +984,7 @@ const definitions: Definition[] = [
         model: '9290022169',
         vendor: 'Philips',
         description: 'Hue white ambiance E27 806lm with Bluetooth',
-        extend: [philipsLight({colorTemp: {range: undefined}})],
+        extend: [philipsLight({colorTemp: {range: [153, 454]}})],
     },
     {
         zigbeeModel: ['LTA004'],
