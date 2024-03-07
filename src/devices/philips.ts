@@ -941,7 +941,7 @@ const definitions: Definition[] = [
         zigbeeModel: ['LWA011'],
         model: '929001821618',
         vendor: 'Philips',
-        description: 'Hue white A60 bulb E27 bluetooth',
+        description: 'Hue white E27 806lm with Bluetooth',
         extend: [philipsLight()],
     },
     {
@@ -983,7 +983,7 @@ const definitions: Definition[] = [
         zigbeeModel: ['LTA001', '4080130P6', '4300631P6'],
         model: '9290022169',
         vendor: 'Philips',
-        description: 'Hue white ambiance E27 with Bluetooth',
+        description: 'Hue white ambiance E27 806lm with Bluetooth',
         extend: [philipsLight({colorTemp: {range: undefined}})],
     },
     {
