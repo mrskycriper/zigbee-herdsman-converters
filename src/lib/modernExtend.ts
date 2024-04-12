@@ -356,7 +356,7 @@ export function identify(args?: {isSleepy: boolean}): ModernExtend {
 
 export interface OnOffArgs {
     powerOnBehavior?: boolean, ota?: DefinitionOta, skipDuplicateTransaction?: boolean, endpointNames?: string[],
-    configureReporting?: boolean, multiEndpointPowerOnBehavior: boolean
+    configureReporting?: boolean, multiEndpointPowerOnBehavior?: boolean
 }
 export function onOff(args?: OnOffArgs): ModernExtend {
     args = {powerOnBehavior: true, skipDuplicateTransaction: false, configureReporting: true, multiEndpointPowerOnBehavior: false, ...args};
