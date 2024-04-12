@@ -275,15 +275,9 @@ const definitions: Definition[] = [
         model: 'PECMS01',
         vendor: 'Perenio',
         description: 'Motion sensor',
-        fromZigbee: [fz.battery, fz.ias_occupancy_alarm_1],
-        toZigbee: [],
-        exposes: [e.occupancy(), e.battery_low(), e.tamper(), e.battery()],
-        configure: async (device, coordinatorEndpoint) => {
-            const endpoint = device.getEndpoint(1);
-            await reporting.bind(endpoint, coordinatorEndpoint, ['genPowerCfg']);
-            await reporting.batteryPercentageRemaining(endpoint);
-        },
         extend: [
+            iasZoneAlarm({zoneType: 'occupancy', zoneAttributes: ['alarm_1', 'tamper', 'battery_low']}),
+            battery(),
             ota(),
         ],
     },
