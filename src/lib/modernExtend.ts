@@ -356,10 +356,10 @@ export function identify(args?: {isSleepy: boolean}): ModernExtend {
 
 export interface OnOffArgs {
     powerOnBehavior?: boolean, ota?: DefinitionOta, skipDuplicateTransaction?: boolean, endpointNames?: string[],
-    configureReporting?: boolean,
+    configureReporting?: boolean, multiEndpointPowerOnBehavior: boolean
 }
 export function onOff(args?: OnOffArgs): ModernExtend {
-    args = {powerOnBehavior: true, skipDuplicateTransaction: false, configureReporting: true, ...args};
+    args = {powerOnBehavior: true, skipDuplicateTransaction: false, configureReporting: true, multiEndpointPowerOnBehavior: false, ...args};
 
     const exposes: Expose[] = args.endpointNames ? args.endpointNames.map((ep) => e.switch().withEndpoint(ep)) : [e.switch()];
 
@@ -367,7 +367,10 @@ export function onOff(args?: OnOffArgs): ModernExtend {
     const toZigbee: Tz.Converter[] = [tz.on_off];
 
     if (args.powerOnBehavior) {
-        exposes.push(e.power_on_behavior(['off', 'on', 'toggle', 'previous']));
+        const powerOnBehaviorExpose = e.power_on_behavior(['off', 'on', 'toggle', 'previous']);
+        const powerOnBehaviorExposes: Expose[] = args.multiEndpointPowerOnBehavior ?
+            args.endpointNames.map((ep) => powerOnBehaviorExpose.withEndpoint(ep)) : [powerOnBehaviorExpose];
+        exposes.push(...powerOnBehaviorExposes);
         fromZigbee.push(fz.power_on_behavior);
         toZigbee.push(tz.power_on_behavior);
     }
