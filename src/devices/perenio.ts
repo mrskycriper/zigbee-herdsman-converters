@@ -245,6 +245,68 @@ const tzPerenio = {
     } satisfies Tz.Converter,
 };
 
+function perenioSwitchType(args: {endpointNames: string[]}): ModernExtend {
+    const expose: Expose = e.enum('switch_type', ea.ALL, [
+        'maintained_state',
+        'maintained_toggle',
+        'momentary_state',
+        'momentary_press',
+        'momentary_release',
+    ]);
+    const exposes: Expose[] = args.endpointNames.map((e) => expose.withEndpoint(e));
+
+    const fromZigbee: Fz.Converter[] = [{
+        cluster: 'genMultistateValue',
+        type: ['attributeReport', 'readResponse'],
+        convert: (model, msg, publish, options, meta) => {
+            const result: KeyValue = {};
+            const switchTypeLookup: KeyValue = {
+                0x0001: 'momentary_state',
+                0x0010: 'maintained_state',
+                0x00CC: 'maintained_toggle',
+                0x00CD: 'momentary_release',
+                0x00DC: 'momentary_press',
+            };
+            if (msg.data.hasOwnProperty('presentValue')) {
+                const property = utils.postfixWithEndpointName('switch_type', msg, model, meta);
+                result[property] = switchTypeLookup[msg.data['presentValue']];
+            }
+            return result;
+        },
+    }];
+
+    const toZigbee: Tz.Converter[] = [{
+        key: ['switch_type'],
+        convertSet: async (entity, key, value, meta) => {
+            utils.assertString(value, key);
+            const switchTypeLookup: KeyValue = {
+                'momentary_state': 0x0001,
+                'maintained_state': 0x0010,
+                'maintained_toggle': 0x00CC,
+                'momentary_release': 0x00CD,
+                'momentary_press': 0x00DC,
+            };
+            await entity.write('genMultistateValue', {presentValue: switchTypeLookup[value]}, utils.getOptions(meta.mapped, entity));
+            return {state: {switch_type: value}};
+        },
+        convertGet: async (entity, key, meta) => {
+            await entity.read('genMultistateValue', ['presentValue']);
+        },
+    }];
+
+    const configure: Configure = async (device, coordinatorEndpoint, definition) => {
+        const definitionEndpoints = definition.endpoint(device);
+        const endpointIds = args.endpointNames.map((e) => definitionEndpoints[e]);
+        const endpoints = device.endpoints.filter((e) => endpointIds.includes(e.ID));
+
+        for (const endpoint of endpoints) {
+            await endpoint.read('genMultistateValue', ['presentValue']);
+        }
+    };
+
+    return {exposes, fromZigbee, toZigbee, configure, isModernExtend: true};
+}
+
 const definitions: Definition[] = [
     {
         zigbeeModel: ['PECLS01'],
