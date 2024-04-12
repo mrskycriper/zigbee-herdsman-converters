@@ -262,16 +262,13 @@ const definitions: Definition[] = [
         zigbeeModel: ['ZHA-DoorLockSensor'],
         model: 'PECWS01',
         vendor: 'Perenio',
-        description: 'Door sensor',
-        fromZigbee: [fz.ias_contact_alarm_1, fz.battery, fz.ignore_basic_report, fz.ias_contact_alarm_1_report],
-        toZigbee: [],
-        exposes: [e.contact(), e.battery(), e.battery_voltage()],
-        configure: async (device, coordinatorEndpoint) => {
-            const endpoint = device.getEndpoint(1);
-            await reporting.bind(endpoint, coordinatorEndpoint, ['genPowerCfg']);
-            await reporting.batteryPercentageRemaining(endpoint);
-            await reporting.batteryVoltage(endpoint);
-        },
+        description: 'Door & window sensor',
+        extend: [
+            ignoreClusterReport({cluster: 'genBasic'}),
+            iasZoneAlarm({zoneType: 'contact', zoneAttributes: ['alarm_1']}),
+            battery({voltage: true, voltageReporting: true}),
+            ota(),
+        ],
     },
     {
         fingerprint: [{modelID: 'ZHA-PirSensor', manufacturerName: 'LDS'}],
