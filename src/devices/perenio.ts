@@ -6,7 +6,7 @@ import * as reporting from '../lib/reporting';
 import * as utils from '../lib/utils';
 const e = exposes.presets;
 const ea = exposes.access;
-import {ota} from '../lib/modernExtend';
+import {battery, iasZoneAlarm, ignoreClusterReport, ota} from '../lib/modernExtend';
 
 const switchTypeValues = [
     'maintained_state',
@@ -251,15 +251,10 @@ const definitions: Definition[] = [
         model: 'PECLS01',
         vendor: 'Perenio',
         description: 'Leak sensor',
-        fromZigbee: [fz.ias_water_leak_alarm_1, fz.ignore_basic_report, fz.battery],
-        toZigbee: [],
-        configure: async (device, coordinatorEndpoint) => {
-            const endpoint = device.getEndpoint(1);
-            await reporting.bind(endpoint, coordinatorEndpoint, ['genPowerCfg']);
-            await reporting.batteryPercentageRemaining(endpoint);
-        },
-        exposes: [e.water_leak(), e.battery_low(), e.tamper(), e.battery()],
         extend: [
+            ignoreClusterReport({cluster: 'genBasic'}),
+            iasZoneAlarm({zoneType: 'water_leak', zoneAttributes: ['alarm_1', 'tamper', 'battery_low']}),
+            battery({dontDividePercentage: true}),
             ota(),
         ],
     },
