@@ -6,7 +6,7 @@ import * as reporting from '../lib/reporting';
 import * as utils from '../lib/utils';
 const e = exposes.presets;
 const ea = exposes.access;
-import * as ota from '../lib/ota';
+import {ota} from '../lib/modernExtend';
 
 const switchTypeValues = [
     'maintained_state',
@@ -250,7 +250,7 @@ const definitions: Definition[] = [
         zigbeeModel: ['PECLS01'],
         model: 'PECLS01',
         vendor: 'Perenio',
-        description: 'Flood alarm device',
+        description: 'Leak sensor',
         fromZigbee: [fz.ias_water_leak_alarm_1, fz.ignore_basic_report, fz.battery],
         toZigbee: [],
         configure: async (device, coordinatorEndpoint) => {
@@ -259,7 +259,9 @@ const definitions: Definition[] = [
             await reporting.batteryPercentageRemaining(endpoint);
         },
         exposes: [e.water_leak(), e.battery_low(), e.tamper(), e.battery()],
-        ota: ota.zigbeeOTA,
+        extend: [
+            ota(),
+        ],
     },
     {
         zigbeeModel: ['ZHA-DoorLockSensor'],
@@ -289,7 +291,9 @@ const definitions: Definition[] = [
             await reporting.bind(endpoint, coordinatorEndpoint, ['genPowerCfg']);
             await reporting.batteryPercentageRemaining(endpoint);
         },
-        ota: ota.zigbeeOTA,
+        extend: [
+            ota(),
+        ],
     },
     {
         zigbeeModel: ['PEHWE20', 'PEHWE2X'],
@@ -412,7 +416,9 @@ const definitions: Definition[] = [
             e.numeric('rssi', ea.STATE).withUnit('dB')
                 .withDescription('RSSI seen by the device').withValueMin(-128).withValueMax(127),
         ],
-        ota: ota.zigbeeOTA,
+        extend: [
+            ota(),
+        ],
     },
 ];
 
