@@ -5,7 +5,10 @@ const {tuyaMagicPacket, tuyaOnOffActionLegacy} = tuyaModernExtend;
 
 const definitions: Definition[] = [
     {
-        fingerprint: [{modelID: 'SM0202', manufacturerName: '_TYZB01_2jzbhomb'}],
+        fingerprint: [
+            {modelID: 'SM0202', manufacturerName: '_TYZB01_2jzbhomb'},
+            {modelID: 'SM0202', manufacturerName: '_TYZB01_bhxcjvlv'},
+        ],
         model: 'SBDV-00029',
         vendor: 'Sber',
         description: 'Smart motion sensor',
@@ -15,7 +18,10 @@ const definitions: Definition[] = [
         ],
     },
     {
-        fingerprint: [{modelID: 'TS0203', manufacturerName: '_TYZB01_epni2jgy'}],
+        fingerprint: [
+            {modelID: 'TS0203', manufacturerName: '_TYZB01_epni2jgy'},
+            {modelID: 'TS0203', manufacturerName: '_TYZB01_nnv2dy5m'},
+        ],
         model: 'SBDV-00030',
         vendor: 'Sber',
         description: 'Smart opening sensor',
